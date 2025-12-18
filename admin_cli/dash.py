@@ -21,7 +21,7 @@ from rich.prompt import Prompt
 from pyfiglet import Figlet
 
 # --- CONFIGURAÇÕES ---
-API_URL = "http://127.0.0.1:8000"
+API_URL = "https://nexus-server-kjfv.onrender.com"
 ADMIN_SECRET = "MINHA_SENHA_FORTE_123"
 
 console = Console()

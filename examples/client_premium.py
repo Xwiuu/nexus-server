@@ -14,7 +14,7 @@ from rich.align import Align
 from rich.prompt import Prompt
 
 # --- CONFIGURAÇÕES ---
-API_URL = "http://127.0.0.1:8000"
+API_URL = "https://nexus-server-kjfv.onrender.com"
 APP_NAME = "INSTA-HACKER PRO" 
 VERSION = "v4.2.0"
 
