@@ -14,9 +14,12 @@ from rich.align import Align
 from rich.prompt import Prompt
 
 # --- CONFIGURAÇÕES ---
-API_URL = "https://nexus-server-kjfv.onrender.com"
+# ⚠ ATENÇÃO: Confirme se este link é o do SEU Render atual!
+API_URL = "https://nexus-server-kjfv.onrender.com" 
+# (Se mudou o projeto no Render, atualize o link acima)
+
 APP_NAME = "INSTA-HACKER PRO" 
-VERSION = "v4.2.0"
+VERSION = "v4.5.1 (Stable)"
 
 console = Console()
 
@@ -25,19 +28,17 @@ def clear():
 
 def get_hwid():
     """Gera o DNA único do PC (Hardware ID)"""
-    # Pega info da placa mãe, processador e nó de rede
     info = platform.node() + platform.machine() + platform.processor() + str(uuid.getnode())
-    # Transforma num hash seguro
     return hashlib.sha256(info.encode()).hexdigest()
 
 def fake_loading():
-    """Simula o software carregando módulos (Pura estética)"""
+    """Simula o software carregando módulos"""
     steps = [
         "Carregando Interface Gráfica...", 
         "Conectando API do Instagram...", 
         "Bypassing SSL Pinning...", 
-        "Preparando Motores de Automação...",
-        "Otimizando Memória..."
+        "Otimizando Memória RAM...",
+        "Validando Tokens de Sessão..."
     ]
     
     with Progress(
@@ -49,99 +50,106 @@ def fake_loading():
         task = progress.add_task("Init", total=len(steps))
         for step in steps:
             progress.update(task, description=step)
-            time.sleep(random.uniform(0.5, 1.5)) # Tempo aleatório
+            time.sleep(random.uniform(0.5, 1.0))
             progress.advance(task)
 
 def main():
     clear()
-    # Banner do Software
     console.print(Panel(Align.center(f"[bold white]{APP_NAME}[/]\n[dim]{VERSION}[/]"), style="blue", border_style="blue"))
     
     # --- 1. VERIFICAÇÃO DE LICENÇA ---
     
-    # Tenta ler arquivo local primeiro (pra não pedir a chave toda hora)
+    # Procura na raiz (onde o comando é executado)
+    key_file = "license.key"
     key = ""
-    if os.path.exists("license.key"):
+
+    if os.path.exists(key_file):
         try:
-            with open("license.key", "r") as f:
+            with open(key_file, "r") as f:
                 key = f.read().strip()
             console.print(f"[dim]📂 Chave encontrada no arquivo: {key}[/]")
         except: pass
 
-    # Se não achou arquivo, pede pro usuário digitar
     if not key:
-        console.print("[yellow]⚠ Nenhuma licença ativa encontrada.[/]")
+        console.print("[yellow]⚠ Nenhuma licença salva encontrada.[/]")
         key = Prompt.ask("[bold cyan]Digite sua Chave de Acesso[/]").strip()
 
     hwid = get_hwid()
-    console.print("\n[dim]🔄 Conectando ao servidor Nexus...[/]")
+    console.print("\n[dim]🔄 Conectando ao servidor Nexus na Nuvem...[/]")
     
     try:
-        # PING DE VALIDAÇÃO (Momento da verdade)
-        # Enviamos Key + HWID para ver se o servidor deixa entrar
+        # PING DE VALIDAÇÃO INICIAL
         payload = {"key": key, "hwid": hwid, "cpu_percent": 0, "ram_mb": 0}
-        resp = requests.post(f"{API_URL}/verify", json=payload, timeout=5)
+        resp = requests.post(f"{API_URL}/verify", json=payload, timeout=10)
         
         if resp.status_code == 200:
             console.print("[bold green]✅ ACESSO AUTORIZADO![/]")
             time.sleep(1)
-            
-            # Sucesso! Salva a chave para a próxima vez
-            with open("license.key", "w") as f: f.write(key)
+            # Salva a chave na raiz para a próxima vez
+            with open(key_file, "w") as f: f.write(key)
             
         else:
-            # Erro (Banido, Inválido ou HWID Errado)
-            detail = resp.json().get('detail', 'Erro desconhecido')
+            detail = resp.json().get('detail', 'Chave rejeitada pelo servidor.')
             console.print(f"[bold red]⛔ ACESSO NEGADO: {detail}[/]")
-            
-            # Se a chave for inválida, deletamos o arquivo local para não travar o usuário
-            if os.path.exists("license.key"): os.remove("license.key")
+            # Se a chave for ruim, apaga o arquivo para não travar o usuário num loop
+            if os.path.exists(key_file): os.remove(key_file)
             sys.exit()
             
     except requests.exceptions.ConnectionError:
-        console.print("[bold red]❌ ERRO CRÍTICO: Servidor Offline ou Sem Internet.[/]")
-        console.print("[dim]Verifique se o 'server/main.py' está rodando.[/]")
+        console.print("[bold red]❌ ERRO CRÍTICO: Não foi possível conectar ao Render.[/]")
+        console.print("[dim]Verifique sua internet ou se a URL no código está certa.[/]")
         sys.exit()
     except Exception as e:
-        console.print(f"[red]Erro inesperado: {e}[/]")
+        console.print(f"[red]Erro: {e}[/]")
         sys.exit()
 
-    # --- 2. O SOFTWARE RODANDO (Simulação) ---
+    # --- 2. O SOFTWARE RODANDO ---
     
-    fake_loading() # Efeito visual
+    fake_loading() 
     
     clear()
-    console.print(Panel(Align.center(f"[bold green]{APP_NAME} RODANDO[/]\n[white]Pressione Ctrl+C para parar[/]"), border_style="green"))
+    console.print(Panel(Align.center(f"[bold green]{APP_NAME} ATIVO[/]\n[white]Monitorando tarefas... (Ctrl+C para sair)[/]"), border_style="green"))
     
     try:
         task_count = 0
         while True:
-            # Simula o bot trabalhando
-            time.sleep(3) 
+            time.sleep(3) # Tempo entre ações
             task_count += 1
             
-            # Coleta dados reais do TEU PC para enviar ao Painel Tático
+            # Coleta dados reais
             cpu = psutil.cpu_percent()
-            ram = psutil.virtual_memory().used / (1024 * 1024) # Converte bytes para MB
+            ram = psutil.virtual_memory().used / (1024 * 1024)
             
-            # Envia Heartbeat pro Nexus (Telemetria)
+            # Tenta enviar dados
             try:
-                requests.post(f"{API_URL}/verify", json={
+                resp = requests.post(f"{API_URL}/verify", json={
                     "key": key,
                     "hwid": hwid,
                     "cpu_percent": cpu,
                     "ram_mb": ram
-                })
+                }, timeout=5)
                 
-                # Log visual para o cliente saber que está tudo bem
-                timestamp = time.strftime("%H:%M:%S")
-                console.print(f"[dim]{timestamp}[/] [cyan]Action #{task_count}[/] Curtindo foto... [dim](Ping: {int(cpu)}% CPU | {int(ram)}MB RAM)[/]")
-            
-            except:
-                console.print("[red]⚠ Falha ao contatar servidor... (Modo Offline Temporário)[/]")
+                # AQUI ESTÁ A CORREÇÃO: VERIFICA SE O SERVIDOR AINDA ACEITA A CHAVE
+                if resp.status_code == 200:
+                    timestamp = time.strftime("%H:%M:%S")
+                    console.print(f"[dim]{timestamp}[/] [cyan]Action #{task_count}[/] Curtindo foto... [dim](Ping: {int(cpu)}% CPU)[/]")
+                
+                elif resp.status_code == 404:
+                    # O servidor reiniciou e esqueceu a chave
+                    console.print("\n[bold red blink]⛔ ERRO FATAL: SESSÃO EXPIRADA![/]")
+                    console.print("[red]O servidor na nuvem reiniciou e sua chave não existe mais no banco temporário.[/]")
+                    console.print("[yellow]>> SOLUÇÃO: Vá no Painel Admin, Crie o Produto e Gere uma NOVA CHAVE.[/]")
+                    if os.path.exists(key_file): os.remove(key_file) # Apaga a chave velha
+                    break # Sai do loop
+                
+                else:
+                    console.print(f"[red]⚠ Erro de conexão: Status {resp.status_code}[/]")
+
+            except requests.exceptions.ConnectionError:
+                console.print("[red]⚠ Falha de conexão (Internet oscilando?)[/]")
 
     except KeyboardInterrupt:
-        console.print("\n[yellow]Software encerrado pelo usuário.[/]")
+        console.print("\n[yellow]Software encerrado.[/]")
 
 if __name__ == "__main__":
     main()
