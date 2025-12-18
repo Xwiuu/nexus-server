@@ -5,7 +5,7 @@ import hashlib
 import sys
 
 # --- COLOQUE O SEU LINK DO RENDER AQUI ---
-API_URL = "https://nexus-server-SUA-URL.onrender.com" 
+API_URL = "https://nexus-server-kjfv.onrender.com" 
 # (Garanta que não tem barra / no final)
 
 def get_hwid():
