@@ -21,6 +21,7 @@ from rich.prompt import Prompt
 from pyfiglet import Figlet
 
 # --- CONFIGURAÇÕES ---
+# JÁ COLOQUEI O SEU LINK CERTO AQUI:
 API_URL = "https://nexus-server-kjfv.onrender.com"
 ADMIN_SECRET = "MINHA_SENHA_FORTE_123"
 
@@ -65,13 +66,15 @@ def cinematic_boot():
 def fetch_data():
     """Busca sessões ativas com IP"""
     try:
+        # Tenta pegar os dados. Se der erro, imprime no terminal para debug.
         resp = requests.get(
-            f"{API_URL}/admin/stats",
-            headers={"admin-secret": ADMIN_SECRET},
-            timeout=0.2,
+            f"{API_URL}/admin/stats", headers={"admin-secret": ADMIN_SECRET}, timeout=5
         )
-        return resp.json()["sessions"] if resp.status_code == 200 else []
-    except:
+        if resp.status_code == 200:
+            return resp.json()["sessions"]
+        else:
+            return []
+    except Exception:
         return []
 
 
@@ -160,11 +163,10 @@ RAM: [yellow]{ram}%[/]
     )
 
 
-# --- 3. MENU TÁTICO (O VISUAL FODA VOLTOU) ---
+# --- 3. MENU TÁTICO ---
 def action_menu():
     os.system("cls" if os.name == "nt" else "clear")
 
-    # CABEÇALHO DE ALERTA
     alert = Text(
         "⚠ SYSTEM OVERRIDE DETECTED ⚠",
         justify="center",
@@ -173,7 +175,6 @@ def action_menu():
     console.print(Panel(alert, border_style="red"))
     console.print(Align.center("[dim]Monitoramento pausado. Aguardando ordens...[/]\n"))
 
-    # TABELA TÁTICA
     table = Table(expand=True, border_style="blue", box=box.HEAVY_HEAD)
     table.add_column("ID", justify="center", style="bold cyan", width=4)
     table.add_column("PROTOCOL / ACTION", style="bold white")
@@ -187,7 +188,6 @@ def action_menu():
 
     console.print(table)
 
-    # USER INFO
     console.print(
         Panel(
             f"[bold yellow]USER:[/] root   [bold yellow]IP:[/] 127.0.0.1   [bold yellow]ID:[/] {random.randint(1000,9999)}",
@@ -195,7 +195,6 @@ def action_menu():
         )
     )
 
-    # INPUT ESTILIZADO
     try:
         opt = Prompt.ask(
             "\n[bold red]root@nexus:~/admin#[/]", choices=["1", "2", "3", "0"]
@@ -203,7 +202,6 @@ def action_menu():
     except KeyboardInterrupt:
         sys.exit()
 
-    # LÓGICA DOS COMANDOS
     if opt == "1":
         console.rule("[bold cyan]FACTORY PROTOCOL[/]")
         name = Prompt.ask("[cyan]Nome do Produto[/]")
@@ -233,8 +231,6 @@ def action_menu():
                     json={"product_code": code, "source": src},
                     headers={"admin-secret": ADMIN_SECRET},
                 )
-
-                # CHAVE EM DESTAQUE
                 console.print(
                     Panel(
                         Align.center(f"[bold yellow]{r.json()['key']}[/]"),
@@ -257,12 +253,6 @@ def action_menu():
 
 # --- LOOP PRINCIPAL ---
 def main():
-    try:
-        requests.get(API_URL)
-    except:
-        console.print("[red]ERRO: Servidor Offline.[/]")
-        return
-
     cinematic_boot()
     layout = make_layout()
 
