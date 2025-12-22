@@ -1,6 +1,11 @@
 import os
 import datetime
-from fastapi import FastAPI, HTTPException, Header
+from fastapi import (
+    FastAPI,
+    HTTPException,
+    Header,
+    Request,
+)  # <--- MUDANÇA AQUI: Request adicionado no topo
 from pydantic import BaseModel
 from typing import Optional, List
 from sqlalchemy import (
@@ -16,7 +21,6 @@ from sqlalchemy import (
 from sqlalchemy.orm import sessionmaker, declarative_base, Session, relationship
 
 # --- 1. CONFIGURAÇÃO DO BANCO (POSTGRESQL) ---
-# Pega a URL do Render. Se não tiver (teste local), usa um arquivo local.
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 # Correção para o Render (ele usa postgres:// mas o SQLAlchemy quer postgresql://)
@@ -129,7 +133,6 @@ def create_license(data: LicenseCreate, admin_secret: str = Header(None)):
     new_key = f"{data.product_code}-{str(uuid.uuid4())[:8].upper()}"
 
     db = SessionLocal()
-    # Verifica se o produto existe
     if not db.query(ProductDB).filter(ProductDB.code == data.product_code).first():
         db.close()
         raise HTTPException(404, "Produto não encontrado. Crie o produto antes.")
@@ -155,14 +158,11 @@ def verify_license(payload: VerifyPayload, request: Request = None):  # type: ig
         db.close()
         raise HTTPException(403, "Esta licença foi banida.")
 
-    # HWID LOCK (Segurança V2): Se for o primeiro uso, grava o HWID.
-    # Se já tiver HWID e for diferente, bloqueia (opcional, aqui vou só atualizar para facilitar o teste)
     if not license.hwid:
         license.hwid = payload.hwid
 
-    # Atualiza Status
     license.last_login = datetime.datetime.utcnow()
-    license.ip = request.client.host if request else "0.0.0.0"  # Pega o IP real
+    license.ip = request.client.host if request else "0.0.0.0"
     license.cpu_usage = payload.cpu_percent
     license.ram_usage = payload.ram_mb
     license.is_online = True
@@ -179,7 +179,6 @@ def get_stats(admin_secret: str = Header(None)):
         raise HTTPException(401, "Sai daqui curioso")
 
     db = SessionLocal()
-    # Pega licenças que logaram nos últimos 2 minutos (considera "Online")
     limit_time = datetime.datetime.utcnow() - datetime.timedelta(minutes=2)
     active = db.query(LicenseDB).filter(LicenseDB.last_login > limit_time).all()
 
@@ -196,7 +195,3 @@ def get_stats(admin_secret: str = Header(None)):
         )
     db.close()
     return {"sessions": results}
-
-
-# Importante para pegar o IP real no FastAPI
-from fastapi import Request
